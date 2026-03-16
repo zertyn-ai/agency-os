@@ -49,15 +49,28 @@ if [[ -f "$SETTINGS_FILE" ]] && command -v jq &>/dev/null; then
   # Remove any hooks that reference agency-os or AGENCY_DIR
   TEMP_SETTINGS=$(mktemp)
   jq --arg dir "$AGENCY_DIR" '
+    # Remove from hooks.* (matcher+hooks format)
     if .hooks then
       .hooks |= with_entries(
         .value |= (if type == "array" then
           map(select(
-            (if type == "object" then .command else . end) |
-            tostring | (contains($dir) or contains("agency-os")) | not
+            (.hooks // [{}])[0].command // "" |
+            (contains($dir) or contains("agency-os")) | not
           ))
         else . end)
       )
+    else . end |
+    # Remove from onSessionStart
+    if .onSessionStart then
+      .onSessionStart |= map(select(
+        .command // "" | (contains($dir) or contains("agency-os")) | not
+      ))
+    else . end |
+    # Remove from onSessionEnd
+    if .onSessionEnd then
+      .onSessionEnd |= map(select(
+        .command // "" | (contains($dir) or contains("agency-os")) | not
+      ))
     else . end
   ' "$SETTINGS_FILE" > "$TEMP_SETTINGS" 2>/dev/null
 

@@ -372,66 +372,78 @@ fi
 cp "$SETTINGS_FILE" "${SETTINGS_FILE}.backup" 2>/dev/null || true
 
 # Define hooks to install
+# Claude Code hook format: each event has array of {matcher, hooks[]} objects
+# SessionStart/SessionEnd are top-level "onSessionStart"/"onSessionEnd" arrays
 HOOKS_JSON=$(cat << HOOKSJSON
 {
   "hooks": {
     "PreToolUse": [
-      {"type": "command", "command": "bash $AGENCY_DIR/hooks/block-dangerous.sh"}
+      {"matcher": "Bash", "hooks": [{"type": "command", "command": "bash $AGENCY_DIR/hooks/block-dangerous.sh"}]}
     ],
     "PostToolUse": [
-      {"type": "command", "command": "bash $AGENCY_DIR/hooks/auto-format.sh"},
-      {"type": "command", "command": "bash $AGENCY_DIR/hooks/clear-input-flag.sh"}
+      {"matcher": "Edit|Write|MultiEdit", "hooks": [{"type": "command", "command": "bash $AGENCY_DIR/hooks/auto-format.sh"}]},
+      {"matcher": "*", "hooks": [{"type": "command", "command": "bash $AGENCY_DIR/hooks/clear-input-flag.sh"}]}
     ],
     "PreCompact": [
-      {"type": "command", "command": "bash $AGENCY_DIR/hooks/pre-compact.sh"}
+      {"hooks": [{"type": "command", "command": "bash $AGENCY_DIR/hooks/pre-compact.sh"}]}
     ],
     "Stop": [
-      {"type": "command", "command": "bash $AGENCY_DIR/hooks/ralph-loop.sh"}
-    ],
-    "SessionStart": [
-      {"type": "command", "command": "bash $AGENCY_DIR/scripts/session-start.sh"}
-    ],
-    "SessionEnd": [
-      {"type": "command", "command": "bash $AGENCY_DIR/scripts/session-end.sh"},
-      {"type": "command", "command": "bash $AGENCY_DIR/hooks/session-metrics.sh"}
+      {"hooks": [{"type": "command", "command": "bash $AGENCY_DIR/hooks/ralph-loop.sh"}]}
     ]
-  }
+  },
+  "onSessionStart": [
+    {"type": "command", "command": "bash $AGENCY_DIR/scripts/session-start.sh"}
+  ],
+  "onSessionEnd": [
+    {"type": "command", "command": "bash $AGENCY_DIR/scripts/session-end.sh"},
+    {"type": "command", "command": "bash $AGENCY_DIR/hooks/session-metrics.sh"}
+  ]
 }
 HOOKSJSON
 )
 
 if check_cmd jq; then
-  # Append hooks to existing arrays (deduplicate by command)
+  # Merge hooks into settings.json
+  # - hooks.*: each event is array of {matcher?, hooks[]} — deduplicate by first hook command
+  # - onSessionStart/onSessionEnd: top-level arrays of {type, command} — deduplicate by command
   MERGED=$(jq --argjson new "$HOOKS_JSON" '
-    # Initialize hooks if missing
+    # Merge hooks.* (matcher+hooks format)
     .hooks //= {} |
-    # For each hook type in new, append entries not already present
     reduce ($new.hooks | to_entries[]) as $entry (.;
       .hooks[$entry.key] //= [] |
-      .hooks[$entry.key] += [
-        $entry.value[] |
-        select(. as $new_hook |
-          any(input_filename; false) or  # always true
-          ([$new_hook.command] - [.hooks[$entry.key][]?.command] | length > 0)
-        )
-      ] |
-      # Deduplicate by command
-      .hooks[$entry.key] |= (
-        reduce .[] as $item ([];
-          if any(.[]; .command == $item.command) then . else . + [$item] end
-        )
+      # Add entries whose first hook command is not already present
+      reduce ($entry.value[]) as $new_entry (.;
+        ($new_entry.hooks[0].command) as $cmd |
+        if (.hooks[$entry.key] | any(.hooks[0].command == $cmd)) then .
+        else .hooks[$entry.key] += [$new_entry]
+        end
       )
-    )
+    ) |
+    # Merge onSessionStart (flat {type, command} format)
+    if $new.onSessionStart then
+      .onSessionStart //= [] |
+      reduce ($new.onSessionStart[]) as $entry (.;
+        if (.onSessionStart | any(.command == $entry.command)) then .
+        else .onSessionStart += [$entry]
+        end
+      )
+    else . end |
+    # Merge onSessionEnd (flat {type, command} format)
+    if $new.onSessionEnd then
+      .onSessionEnd //= [] |
+      reduce ($new.onSessionEnd[]) as $entry (.;
+        if (.onSessionEnd | any(.command == $entry.command)) then .
+        else .onSessionEnd += [$entry]
+        end
+      )
+    else . end
   ' "$SETTINGS_FILE" 2>/dev/null || echo "")
 
   if [[ -n "$MERGED" ]]; then
     echo "$MERGED" > "$SETTINGS_FILE"
     echo -e "  ${GREEN}+${NC} Hooks installed in settings.json"
   else
-    # Fallback: simpler merge
-    jq --argjson new "$HOOKS_JSON" '. * $new' "$SETTINGS_FILE" > "${SETTINGS_FILE}.tmp" 2>/dev/null && \
-      mv "${SETTINGS_FILE}.tmp" "$SETTINGS_FILE"
-    echo -e "  ${GREEN}+${NC} Hooks installed (simple merge)"
+    echo -e "  ${RED}Failed to merge hooks. Check $SETTINGS_FILE manually.${NC}"
   fi
 else
   echo -e "  ${YELLOW}jq not available — manual hook setup needed.${NC}"
