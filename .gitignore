@@ -1,0 +1,16 @@
+config
+.agency.env
+handoffs/
+metrics/
+feedback/
+live/
+history/
+reviews/
+reports/
+daily-plan.yaml
+projects.yaml
+profile
+.claude/settings.json
+node_modules/
+*.db
+.DS_Store

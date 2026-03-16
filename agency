@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+#
+# agency — CLI entrypoint for Agency OS.
+# Turn Claude Code into a full dev agency.
+
+AGENCY_DIR="$(cd "$(dirname "$0")" && pwd)"
+source "$AGENCY_DIR/lib/env.sh"
+
+case "${1:-help}" in
+  setup)     bash "$AGENCY_DIR/setup.sh" "${@:2}" ;;
+  init)      bash "$AGENCY_DIR/scripts/agency-init.sh" "${@:2}" ;;
+  dispatch)  bash "$AGENCY_DIR/scripts/agency-dispatch.sh" "${@:2}" ;;
+  scan)      bash "$AGENCY_DIR/scripts/agency-scan.sh" "${@:2}" ;;
+  status)    bash "$AGENCY_DIR/scripts/agency-status.sh" "${@:2}" ;;
+  doctor)    bash "$AGENCY_DIR/scripts/agency-preflight.sh" "${@:2}" ;;
+  update)    bash "$AGENCY_DIR/scripts/agency-update.sh" "${@:2}" ;;
+  uninstall) bash "$AGENCY_DIR/scripts/agency-uninstall.sh" "${@:2}" ;;
+  help|*)
+    cat << 'EOF'
+Agency OS — Turn Claude Code into a full dev agency.
+
+Usage: agency <command>
+
+Commands:
+  setup      Install dependencies and configure Agency OS
+  init       Analyze a project — generate codex, register, baseline
+  dispatch   Launch parallel agent sessions from daily plan
+  scan       Scan all projects for status and signals
+  status     Show running agent sessions
+  doctor     Run pre-flight health checks
+  update     Pull latest changes and refresh symlinks
+  uninstall  Remove Agency OS hooks, symlinks, and PATH entry
+
+Workflow:
+  1. agency setup                        # one-time install
+  2. cd ~/projects/myapp && agency init   # per-project setup
+  3. claude → /plan-day                   # plan + auto-dispatch
+  4. Review PRs + merge                   # you're the boss
+EOF
+    ;;
+esac
