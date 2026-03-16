@@ -406,9 +406,28 @@ if check_cmd jq; then
   # Merge hooks into settings.json
   # - hooks.*: each event is array of {matcher?, hooks[]} — deduplicate by first hook command
   # - onSessionStart/onSessionEnd: top-level arrays of {type, command} — deduplicate by command
-  MERGED=$(jq --argjson new "$HOOKS_JSON" '
-    # Merge hooks.* (matcher+hooks format)
+  MERGED=$(jq --argjson new "$HOOKS_JSON" --arg agency_dir "$AGENCY_DIR" '
+    # First: remove any old-format Agency OS entries (flat {type,command} without .hooks array)
+    # and any existing Agency OS entries (to replace cleanly on re-run)
     .hooks //= {} |
+    .hooks |= with_entries(
+      .value |= (if type == "array" then
+        map(select(
+          # Keep entries that are NOT from Agency OS
+          ((.hooks[0].command // .command // "") | contains($agency_dir) or contains("agency-os")) | not
+        ))
+      else . end)
+    ) |
+    # Remove invalid SessionStart/SessionEnd from inside hooks (old bug)
+    .hooks |= del(.SessionStart) | .hooks |= del(.SessionEnd) |
+    # Also clean onSessionStart/onSessionEnd of old Agency OS entries
+    (if .onSessionStart then
+      .onSessionStart |= map(select((.command // "") | (contains($agency_dir) or contains("agency-os")) | not))
+    else . end) |
+    (if .onSessionEnd then
+      .onSessionEnd |= map(select((.command // "") | (contains($agency_dir) or contains("agency-os")) | not))
+    else . end) |
+    # Now add fresh hooks
     reduce ($new.hooks | to_entries[]) as $entry (.;
       .hooks[$entry.key] //= [] |
       # Add entries whose first hook command is not already present
