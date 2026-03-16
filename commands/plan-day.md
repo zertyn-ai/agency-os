@@ -26,12 +26,32 @@ After the scan, read `$AGENCY_DIR/projects.yaml` and show me the list organized 
 
 If any directory has no projects, indicate that it is empty.
 
+## Interaction Style (CRITICAL)
+
+**Use the AskUserQuestion tool** to present choices whenever there are common options to pick from. Always include a **"Let me type my own answer"** option at the end so the user can provide free-text input if none of the options fit. If the user selects that option, follow up with an open-ended text question.
+
+For truly open-ended questions where predefined options don't make sense (e.g., "describe what you want to build"), ask directly as text — no need to force a selector.
+
+Examples of CORRECT interaction:
+- "Which project?" → AskUserQuestion with the list of projects from projects.yaml + "Let me type my own answer"
+- "What kind of task?" → AskUserQuestion: `New feature`, `Bug fix`, `Refactor`, `Integration`, `Design`, `Let me type my own answer`
+- "Which database?" → AskUserQuestion: `Supabase (Postgres + Auth + Realtime)`, `Firebase (Firestore + Auth)`, `PostgreSQL (raw)`, `SQLite`, `MongoDB`, `Let me type my own answer`
+- "Which auth provider?" → AskUserQuestion: `Supabase Auth`, `Clerk`, `NextAuth/Auth.js`, `Firebase Auth`, `Custom JWT`, `Let me type my own answer`
+- "Which UI framework?" → AskUserQuestion: `shadcn/ui`, `Tailwind only`, `Material UI`, `Chakra UI`, `Let me type my own answer`
+- "Which deployment?" → AskUserQuestion: `Vercel`, `Netlify`, `Railway`, `Fly.io`, `AWS`, `Self-hosted`, `Let me type my own answer`
+- "Complexity?" → AskUserQuestion: `S (< 30 min)`, `M (1-2h)`, `L (2-4h)`
+- "What do you want to accomplish?" → plain text question (open-ended, no selector needed)
+
+Guide the user through the plan like a wizard — step by step, one question at a time. Use selectors for decisions, text for descriptions.
+
 ## Flow
 
-1. Show me the available projects.
-2. Ask me which projects I want to work on today and what I want to accomplish in each one.
-3. For each task:
-   - Ask me clarifying questions until the spec is executable by a senior dev without ambiguity
+1. Show the available projects, then use AskUserQuestion to let the user select which project(s) to work on today.
+2. For each selected project, ask what they want to accomplish — this can be open-ended text OR use AskUserQuestion with common task types if the project's stack suggests obvious options.
+3. For each task, refine with structured questions:
+   - Present relevant technology/approach options as selectable lists based on context
+   - Use open-ended questions when the user needs to describe something specific
+   - Ask clarifying questions until the spec is executable by a senior dev without ambiguity
    - Break down into sub-tasks if it's complex (L)
    - Assign a role: `architect`, `designer`, `frontend`, `figma-to-web`, `figma-to-mobile`, `mobile`, `backend`, `qa`, `devops`, `security`, `docs`, `analyst`, `data`, `product`, `writer`
    - Use `figma-to-web` for implementing web designs from Figma (landing pages, platforms, dashboards)
