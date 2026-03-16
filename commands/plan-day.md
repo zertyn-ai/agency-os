@@ -105,8 +105,31 @@ projects:
 ## After plan approval
 
 When the plan is approved:
-- If there are 2+ tasks: automatically run `agency dispatch` (or `bash $AGENCY_DIR/scripts/agency-dispatch.sh`).
 - If there is only 1 task: ask if the user wants to dispatch or work on it in the current session.
+- If there are 2+ tasks: launch dispatch in a **NEW terminal window** (NOT inside this Claude session — Zellij needs a real terminal).
+
+To open dispatch in a new terminal window, run this command:
+
+```bash
+AGENCY_DIR="$(realpath ~/.claude/commands/plan-day.md | xargs dirname | xargs dirname)"
+DISPATCH_CMD="bash $AGENCY_DIR/scripts/agency-dispatch.sh"
+
+case "${TERM_PROGRAM:-}" in
+  Apple_Terminal)
+    osascript -e "tell application \"Terminal\" to do script \"$DISPATCH_CMD\"" ;;
+  ghostty)
+    nohup ghostty -e bash -c "$DISPATCH_CMD" &>/dev/null & ;;
+  iTerm.app|iTerm2)
+    osascript -e "tell application \"iTerm\" to create window with default profile command \"$DISPATCH_CMD\"" ;;
+  WarpTerminal)
+    osascript -e "tell application \"Warp\" to do script \"$DISPATCH_CMD\"" ;;
+  *)
+    osascript -e "tell application \"Terminal\" to do script \"$DISPATCH_CMD\"" 2>/dev/null ||
+      echo "Open a new terminal and run: $DISPATCH_CMD" ;;
+esac
+```
+
+**NEVER run dispatch inside this Claude session.** It will fail because Zellij requires an interactive terminal.
 
 ## Rules
 - Do not generate YAML until I confirm.
