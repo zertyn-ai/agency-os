@@ -1,81 +1,57 @@
+<div align="center">
+
+<!-- Replace with your logo when ready
+<picture>
+  <source media="(prefers-color-scheme: light)" srcset="docs/assets/agency-os-logo-dark.svg">
+  <img src="docs/assets/agency-os-logo-light.svg" alt="Agency OS" width="400">
+</picture>
+-->
+
 # Agency OS
 
-> Turn Claude Code into a full dev agency.
-> 17 roles. 11 commands. Parallel Zellij dispatch. Production-grade safety.
+**Turn Claude Code into a dev team.**
 
-## The Problem
+Run multiple AI agents in parallel — each with a specialized role, each on its own branch, each opening its own PR. You plan, approve, and merge. They do the rest.
 
-Claude Code is powerful, but it works one session at a time. You describe a task, it executes, you review. For a single fix, that's fine. For a real workday — 6 tasks across 3 projects — you're bottlenecked on sequential execution.
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=for-the-badge)](LICENSE)
+[![GitHub release](https://img.shields.io/github/v/release/zertyn-ai/agency-os?style=for-the-badge)](https://github.com/zertyn-ai/agency-os/releases)
+[![GitHub stars](https://img.shields.io/github/stars/zertyn-ai/agency-os?style=for-the-badge)](https://github.com/zertyn-ai/agency-os/stargazers)
 
-Agency OS turns Claude Code into a **parallel autonomous dev team**. You plan your day, approve the plan, and dispatch launches specialized agents in parallel Zellij sessions. Each agent gets a role (frontend, backend, security, QA...), works on a feature branch, and creates a PR when done. You review and merge.
+<!-- Add your demo GIF here — this is the single highest-impact addition to this README
+![Agency OS Demo](docs/assets/demo.gif)
+-->
 
-**Three human touchpoints:** approve plan, review PRs, merge.
+[Install](#install) · [Getting Started](#getting-started) · [How It Works](#how-it-works) · [Windows](#windows-via-wsl) · [FAQ](#faq)
 
-## How It Works
+</div>
 
-```
-You → /plan-day → Approve → agency dispatch → Zellij
-                                                 ├── [Watcher] Live progress dashboard
-                                                 ├── [saas-app] Orchestrator → frontend agent → /ship → PR #42
-                                                 ├── [mobile]   Orchestrator → mobile agent   → /ship → PR #18
-                                                 └── [api]      Orchestrator → backend agent  → /ship → PR #7
-                                                                                  ↓
-                                                                          You review + merge
-```
+---
 
-### The Dispatch Flow
+## Why?
 
-1. **`/plan-day`** — Interactive planning. You describe what you want done. Claude asks clarifying questions until every task is executable.
-2. **Plan YAML** — Tasks are written to `daily-plan.yaml` with roles, specs, dependencies, and complexity estimates.
-3. **`agency dispatch`** — Reads the plan, creates a Zellij session with one tab per project.
-4. **Orchestrator** — Each project gets an orchestrator agent that reads the plan and delegates tasks to role-specialized sub-agents.
-5. **Sub-agents** — Each task is handled by a specialist (frontend, backend, security, QA...) with full role context injected.
-6. **`/ship`** — When a task is done, the agent creates a feature branch, commits, pushes, and opens a PR with risk labels.
-7. **Watcher** — The first Zellij tab shows real-time progress: which agents are working, what they're doing, and when they finish.
-8. **You review** — PRs arrive with risk labels (auto-merge, low-risk, dependency-review, security-review). You review and merge.
+Claude Code works one session at a time. Your day has 8 tasks across 3 projects. That's 8 sequential sessions — hours of waiting.
 
-### The Architecture
+Agency OS makes it parallel:
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│ Rules (3 files)        Always loaded into every session     │
-│ ├── agent-behavior.md  Context-first, atomic commits        │
-│ ├── code-quality.md    Tests, types, lint                   │
-│ └── git-and-safety.md  Branch policy, safety                │
-├─────────────────────────────────────────────────────────────┤
-│ Roles (17 files)       Specialist prompts                   │
-│ ├── orchestrator.md    Coordinates task execution           │
-│ ├── frontend.md        Web UI, React, accessibility         │
-│ ├── backend.md         APIs, databases, server logic        │
-│ ├── security.md        OWASP, auth, vulnerability analysis  │
-│ └── ... 13 more                                             │
-├─────────────────────────────────────────────────────────────┤
-│ Commands (11 files)    Slash commands for Claude Code        │
-│ ├── /plan-day          Interactive daily planner             │
-│ ├── /ship              Auto PR with risk labels              │
-│ ├── /consult           On-demand expert role                 │
-│ └── ... 8 more                                              │
-├─────────────────────────────────────────────────────────────┤
-│ Hooks (7 files)        Safety + automation                  │
-│ ├── block-dangerous    Blocks destructive commands           │
-│ ├── auto-format        Auto-formats after edits              │
-│ ├── session-metrics    Captures performance data             │
-│ └── ... 4 more                                              │
-├─────────────────────────────────────────────────────────────┤
-│ Scripts                Core automation                       │
-│ ├── dispatch           Parallel Zellij launcher              │
-│ ├── watcher            Live progress dashboard               │
-│ ├── scan               Project discovery                     │
-│ └── init               Project analysis + codex              │
-├─────────────────────────────────────────────────────────────┤
-│ Zellij                 Terminal multiplexer                  │
-│ └── Parallel sessions with tab-per-project layout            │
-└─────────────────────────────────────────────────────────────┘
+9:00 AM  You plan your day with /plan-day         (5 min)
+9:05 AM  You approve the plan                      (1 min)
+9:06 AM  Dispatch launches 5 agents simultaneously
+           ├── frontend agent → builds new dashboard
+           ├── backend agent  → adds API endpoints
+           ├── mobile agent   → updates screens
+           ├── QA agent       → writes integration tests
+           └── security agent → audits auth flow
+11:00 AM 5 PRs ready for review
 ```
 
-Each layer is independent. Use just the rules and commands for everyday Claude Code enhancement. Add dispatch when you're ready for parallel execution.
+**You do 3 things:** plan, approve, merge. Everything between is automated.
 
-## Quick Start
+---
+
+## Install
+
+**Prerequisites:** [Claude Code](https://docs.anthropic.com/en/docs/claude-code) (authenticated), [GitHub CLI](https://cli.github.com/) (`gh auth login`), macOS or Linux. That's the minimum — `setup.sh` handles the rest.
 
 ```bash
 git clone https://github.com/zertyn-ai/agency-os.git ~/.agency
@@ -83,21 +59,125 @@ cd ~/.agency
 bash setup.sh
 ```
 
-Then for each project:
+Setup checks your system, installs missing tools (with your approval), and configures everything. Takes about 2 minutes.
+
+<details>
+<summary>What does setup.sh actually do?</summary>
+
+| What | Where | Reversible? |
+|------|-------|-------------|
+| Installs Zellij, jq, yq | System package manager | Standard uninstall |
+| Symlinks slash commands | `~/.claude/commands/` | `agency uninstall` |
+| Symlinks safety rules | `~/.claude/rules/` | `agency uninstall` |
+| Adds hooks to Claude Code | `~/.claude/settings.json` (backup created first) | `agency uninstall` |
+| Adds `agency` to PATH | One line in `~/.zshrc` or `~/.bashrc` | `agency uninstall` |
+
+No background processes. No telemetry. No data leaves your machine. `agency uninstall` reverses everything.
+
+</details>
+
+---
+
+## Getting Started
+
+### 1. Register a project
+
 ```bash
-cd ~/projects/myapp
+cd ~/projects/my-app
 agency init
 ```
 
-Start your day:
+This scans your project — stack, git history, patterns — and creates a `project-codex.yaml`. Think of it as institutional memory: agents read it before touching your code so they understand existing patterns and known gotchas.
+
+### 2. Plan your day
+
 ```bash
 claude
 > /plan-day
 ```
 
-## What You Get
+Interactive wizard. Claude asks:
+- Which projects today?
+- What tasks for each?
+- What role handles each task? (frontend, backend, security, QA...)
+- How complex? (S = 30 min, M = 1-2h, L = 2-4h)
 
-### 17 Specialized Roles
+When you confirm, it writes `daily-plan.yaml`.
+
+### 3. Dispatch
+
+After you approve, Agency OS opens a new terminal with [Zellij](https://zellij.dev/) — a terminal multiplexer that runs agents side by side:
+
+```
+┌─────────────────────────────────────────────────────┐
+│ Tab 1: Watcher     │ Live progress of all agents     │
+│ Tab 2: my-saas     │ orchestrator → frontend agent   │
+│ Tab 3: api-server  │ orchestrator → backend agent    │
+│ Tab 4: mobile-app  │ orchestrator → mobile agent     │
+└─────────────────────────────────────────────────────┘
+```
+
+Each project gets an **orchestrator** that reads the plan and delegates to specialized sub-agents. Each sub-agent works on a feature branch, runs tests, and opens a PR when done.
+
+### 4. Review and merge
+
+PRs arrive with risk labels so you know what needs careful review:
+
+| Label | Meaning |
+|-------|---------|
+| `auto-merge` | Safe, small, low-risk changes |
+| `low-risk` | Standard feature work |
+| `dependency-review` | New dependencies added |
+| `security-review` | Touches auth, permissions, or sensitive code |
+
+---
+
+## You Don't Have to Go All-In
+
+Use what fits your workflow. Each layer works independently:
+
+| What you use | What you get |
+|-------------|-------------|
+| **Just install** | Every Claude Code session gets: destructive command blocking, auto-formatting, session handoffs between conversations |
+| **+ slash commands** | `/ship` (auto PR), `/consult security` (instant expert), `/techdebt` (debt scanner), 8 more |
+| **+ project init** | Agents learn your codebase patterns and avoid known gotchas |
+| **+ dispatch** | Full parallel execution — the complete flow |
+
+Most value comes from just installing. Dispatch is the power move when you're ready.
+
+---
+
+## How It Works
+
+```
+/plan-day → daily-plan.yaml → agency dispatch → Zellij session
+                                                  │
+                                      ┌───────────┼───────────┐
+                                      ▼           ▼           ▼
+                                 Project A    Project B    Project C
+                                      │           │           │
+                                 Orchestrator Orchestrator Orchestrator
+                                      │           │           │
+                                 Sub-agents   Sub-agents   Sub-agents
+                                 (roles)      (roles)      (roles)
+                                      │           │           │
+                                   /ship       /ship       /ship
+                                      │           │           │
+                                   PR #42      PR #18      PR #7
+                                      │           │           │
+                                      └───────────┼───────────┘
+                                                  ▼
+                                          You review + merge
+```
+
+**Roles** are detailed prompts that give each agent domain expertise. A frontend agent knows React patterns and accessibility. A security agent knows OWASP and auth flows. The orchestrator picks the right role for each task.
+
+**17 roles available:** orchestrator, architect, frontend, backend, mobile, designer, figma-to-web, figma-to-mobile, qa, security, devops, docs, analyst, data, product, writer, reviewer.
+
+**11 slash commands:** `/plan-day`, `/ship`, `/consult`, `/orchestrate`, `/close-day`, `/context-init`, `/techdebt`, `/permissions`, `/promote`, `/ralph`, `/ralph-cancel`.
+
+<details>
+<summary>Full role descriptions</summary>
 
 | Role | Expertise |
 |------|-----------|
@@ -107,7 +187,7 @@ claude
 | `backend` | APIs, databases, server logic |
 | `mobile` | React Native, Expo, mobile UX |
 | `designer` | Figma, design systems, UX |
-| `figma-to-web` | Figma design → web implementation |
+| `figma-to-web` | Figma design → pixel-perfect web implementation |
 | `figma-to-mobile` | Figma design → mobile implementation |
 | `qa` | Testing, edge cases, quality assurance |
 | `security` | OWASP, auth, vulnerability analysis |
@@ -119,7 +199,12 @@ claude
 | `writer` | Technical writing, copy, content |
 | `reviewer` | Code review, PR analysis |
 
-### 11 Workflow Commands
+Use any role on demand without dispatch: `/consult security` → ask your question.
+
+</details>
+
+<details>
+<summary>Full command descriptions</summary>
 
 | Command | What it does |
 |---------|-------------|
@@ -127,95 +212,117 @@ claude
 | `/ship` | Auto commit, push, create PR with risk labels |
 | `/consult [role]` | Adopt any specialist role on demand |
 | `/orchestrate` | Manual orchestration without dispatch |
-| `/close-day` | End-of-day summary, reports, handoffs |
+| `/close-day` | End-of-day summary and handoffs |
 | `/context-init` | Generate CONTEXT.md for a project |
 | `/techdebt` | Scan codebase for technical debt |
 | `/permissions` | Review and adjust file permissions |
-| `/promote` | Promote changes between environments |
+| `/promote` | Pre-promotion checklist for production readiness |
 | `/ralph` | Autonomous iteration loop |
 | `/ralph-cancel` | Cancel active ralph loop |
 
-### Always-On Enhancement
+</details>
 
-Even without dispatch, Agency OS enhances every Claude Code session:
+---
 
-- **Safety hooks** block destructive commands (force push, rm -rf, DROP TABLE)
-- **Auto-format** runs prettier/biome/black after every file edit
-- **Session continuity** — handoff files carry context between sessions
-- **Project codex** — machine-maintained institutional memory per project
-- **Quality baselines** — detect regressions before they ship
+## Safety
 
-### `/consult` — On-Demand Expert Roles
+Agents are powerful. Agency OS adds guardrails:
 
-Use any specialist role in your current session without running dispatch:
+| Layer | What it does |
+|-------|-------------|
+| **Hooks** | Block `force push`, `rm -rf`, `git reset --hard`, `DROP TABLE` before they execute |
+| **Auto-format** | Runs your formatter (prettier/biome/black) after every file edit |
+| **Feature branches** | Agents never touch `main` — always a new branch |
+| **Risk labels** | PRs tagged by risk level so you know what to scrutinize |
+| **Quality baselines** | Snapshots before/after — detects regressions in tests, types, lint |
+| **Pre-commit scan** | Catches leaked API keys and secrets before they're committed |
+| **Branch protection** | Your GitHub settings are the final gate — agents can't bypass them |
 
+---
+
+## Windows (via WSL)
+
+Agency OS runs on Windows through [WSL](https://learn.microsoft.com/en-us/windows/wsl/install) (Windows Subsystem for Linux).
+
+```powershell
+# PowerShell (run as Administrator)
+wsl --install
 ```
-claude
-> /consult security
-> Review this auth middleware for vulnerabilities
-```
 
-### Production-Grade Safety
-
-| Mechanism | What it does |
-|-----------|-------------|
-| `block-dangerous.sh` | Blocks force push, hard reset, rm -rf, DROP TABLE |
-| `auto-approve.sh` | Auto-approves safe ops, blocks dangerous ones |
-| `.githooks/pre-commit` | Scans for leaked API keys and secrets |
-| Feature branches | Agents never push to main |
-| Risk labels | PRs labeled: auto-merge, low-risk, dependency-review, security-review |
-| Quality baselines | Regression detection before merge |
-| GitHub branch protection | Your final safety net |
-
-## CLI Reference
+Restart your PC. Open **Ubuntu** from the Start Menu:
 
 ```bash
-agency setup      # One-time install — deps, symlinks, hooks, PATH
-agency init       # Analyze project — generate codex, register, baseline
-agency dispatch   # Launch parallel agent sessions from daily plan
-agency scan       # Scan all projects for status and signals
-agency status     # Show running agent sessions
-agency doctor     # Run pre-flight health checks
-agency update     # Pull latest changes and refresh symlinks
-agency uninstall  # Remove symlinks, hooks, PATH entry
+git clone https://github.com/zertyn-ai/agency-os.git ~/.agency
+cd ~/.agency
+bash setup.sh
 ```
 
-## Concepts
+**Three things to know:**
+1. **Keep projects inside WSL** (`~/projects/`), not on the Windows mount (`/mnt/c/...`) — 5-10x speed difference.
+2. **Use [Windows Terminal](https://aka.ms/terminal)** for proper Zellij rendering.
+3. **Auth is separate** — `gh auth login` and `claude` auth must be done inside WSL.
 
-### Autonomous Dev Orchestration
+---
 
-Agency OS implements a pattern where AI agents operate autonomously within well-defined guardrails. The orchestrator reads a plan, delegates tasks to role-specialized sub-agents, validates their output, and creates PRs. The human approves the plan upfront and reviews PRs at the end.
+## FAQ
 
-### Role-Based Agent Specialization
+**How much does this cost?**
+Agency OS is free and open-source (MIT). But Claude Code uses the Anthropic API — each agent session consumes tokens. Running 5 parallel agents ≈ 5x the token usage of a single session. Check [Claude Code pricing](https://docs.anthropic.com/en/docs/claude-code) for current rates.
 
-Each role file is a detailed prompt that gives an agent domain expertise. A frontend agent knows about React patterns, accessibility, and CSS. A security agent knows OWASP, auth flows, and common vulnerabilities. The orchestrator reads the appropriate role file and injects it into each sub-agent's system prompt.
+**Can a team use this?**
+Yes. Each developer installs Agency OS on their machine, registers their projects, and runs their own daily plans. There's no shared server — everything is local.
 
-### Project Codex — Institutional Memory
+**What if an agent fails mid-task?**
+The watcher tab shows real-time status. Failed agents are marked clearly. Other agents continue working. You can re-run failed tasks by creating a new plan with just those tasks.
 
-`project-codex.yaml` is a per-project file that tracks gotchas, failed approaches, and health metrics. Agents read it before starting work to avoid repeating mistakes. It's updated automatically after each session with new learnings from errors.
+**What if I don't like what an agent did?**
+Every agent works on a feature branch. If a PR isn't good, close it and delete the branch. Your main branch is never touched.
 
-### Quality Gates — Trust But Verify
+**Do I need Zellij?**
+For parallel dispatch, yes — Zellij runs the agents side by side. But everything else (slash commands, safety hooks, `/consult`, `/ship`) works without Zellij in any normal Claude Code session.
 
-Quality snapshots capture test counts, type errors, and lint warnings before and after agent work. If quality regresses, the system detects it. Smoke tests can verify that web apps still serve expected content after changes.
+**What languages/frameworks does it support?**
+Any. Agency OS doesn't care about your stack — it's a layer on top of Claude Code. If Claude Code can work with your project, Agency OS can dispatch agents for it.
+
+**Something isn't working — where do I get help?**
+See [Troubleshooting](docs/troubleshooting.md) for common issues, or [open an issue](https://github.com/zertyn-ai/agency-os/issues).
+
+---
 
 ## Configuration
 
-The `config` file (created by `agency setup`) controls behavior:
+The `config` file (created by `setup.sh`) controls behavior:
 
 ```bash
 AGENCY_PROFILE="production"
 AGENCY_GH_USER="your-github-username"
 AGENCY_GH_ORG="your-org"
 AGENCY_PROJECTS_DIR="$HOME/projects:$HOME/work"  # colon-separated
-AGENCY_PERMISSIONS_MODE="standard"  # or "yolo"
+AGENCY_PERMISSIONS_MODE="standard"                # or "yolo"
 ```
 
-### Permissions Modes
-
-- **standard** — Uses `--permission-mode bypassPermissions`. Safety hooks still run. Recommended.
-- **yolo** — Uses `--dangerously-skip-permissions`. Maximum speed, zero prompts. For experiments.
+**Permissions modes:**
+- **standard** (default) — Agents run with `bypassPermissions`. Safety hooks still enforce guardrails. Recommended.
+- **yolo** — `dangerously-skip-permissions`. Zero prompts, maximum speed. For experiments and personal projects.
 
 Change anytime: `agency setup --permissions`
+
+---
+
+## CLI Reference
+
+```
+agency setup      Install — check deps, symlinks, hooks, PATH
+agency init       Register project — scan stack, generate codex
+agency dispatch   Launch parallel agents from daily plan
+agency scan       Discover and update project registry
+agency status     Show running agent sessions
+agency doctor     Pre-flight health checks
+agency update     Pull latest + refresh symlinks
+agency uninstall  Remove all symlinks, hooks, PATH entry (clean)
+```
+
+---
 
 ## Updating
 
@@ -223,7 +330,7 @@ Change anytime: `agency setup --permissions`
 agency update
 ```
 
-Pulls latest changes, handles local modifications gracefully, and refreshes all symlinks.
+Pulls latest, handles local changes, refreshes symlinks.
 
 ## Uninstalling
 
@@ -231,7 +338,7 @@ Pulls latest changes, handles local modifications gracefully, and refreshes all 
 agency uninstall
 ```
 
-Removes symlinks from `~/.claude/commands/` and `~/.claude/rules/`, removes hooks from `settings.json`, and removes the PATH entry. Does **not** delete the directory — you do that yourself if you want.
+Removes symlinks, hooks, and PATH entry. Does not delete `~/.agency` — remove it yourself if you want a full cleanup.
 
 ## License
 
