@@ -468,9 +468,11 @@ main() {
 
   # === OUTSIDE ZELLIJ ===
   local this_session_exists=false
-  for s in "${ACTIVE_AGENCY_SESSIONS[@]}"; do
-    [[ "$s" == "$SESSION_NAME" ]] && this_session_exists=true && break
-  done
+  if [[ "$ACTIVE_SESSION_COUNT" -gt 0 ]]; then
+    for s in "${ACTIVE_AGENCY_SESSIONS[@]}"; do
+      [[ "$s" == "$SESSION_NAME" ]] && this_session_exists=true && break
+    done
+  fi
 
   if [[ "$this_session_exists" == true ]]; then
     echo -e "${YELLOW}Session '$SESSION_NAME' is already running.${NC}"
@@ -529,9 +531,11 @@ main() {
     esac
   elif [[ "$ACTIVE_SESSION_COUNT" -gt 0 ]]; then
     echo -e "${BLUE}Other agency session(s) running:${NC}"
-    for s in "${ACTIVE_AGENCY_SESSIONS[@]}"; do
-      echo -e "    $s"
-    done
+    if [[ "$ACTIVE_SESSION_COUNT" -gt 0 ]]; then
+      for s in "${ACTIVE_AGENCY_SESSIONS[@]}"; do
+        echo -e "    $s"
+      done
+    fi
     echo -e "${GREEN}Launching '$SESSION_NAME' alongside them.${NC}"
     echo ""
   fi
