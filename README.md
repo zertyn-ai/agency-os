@@ -2,8 +2,6 @@
 
 <img src="docs/assets/agencyos_logo.png" alt="Agency OS Logo" width="400">
 
-# Agency OS
-
 **Turn Claude Code into a dev team.**
 
 Run multiple AI agents in parallel — each with a specialized role, each on its own branch, each opening its own PR. You plan, approve, and merge. They do the rest.
