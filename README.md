@@ -1,11 +1,6 @@
 <div align="center">
 
-<!-- Replace with your logo when ready
-<picture>
-  <source media="(prefers-color-scheme: light)" srcset="docs/assets/agency-os-logo-dark.svg">
-  <img src="docs/assets/agency-os-logo-light.svg" alt="Agency OS" width="400">
-</picture>
--->
+<img src="docs/assets/agencyos_logo.png" alt="Agency OS Logo" width="400">
 
 # Agency OS
 
