@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="docs/assets/agencyos_logo.png" alt="Agency OS Logo" width="400">
+<img src="docs/assets/agencyos_logo.svg" alt="Agency OS Logo" width="100%">
 
 # Agency OS
 
