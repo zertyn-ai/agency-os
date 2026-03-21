@@ -397,7 +397,11 @@ HOOKS_JSON=$(cat << HOOKSJSON
   "onSessionEnd": [
     {"type": "command", "command": "bash $AGENCY_DIR/scripts/session-end.sh"},
     {"type": "command", "command": "bash $AGENCY_DIR/hooks/session-metrics.sh"}
-  ]
+  ],
+  "attribution": {
+    "commit": "Co-Authored-By: Agency OS <https://github.com/zertyn-ai/agency-os>",
+    "pr": ""
+  }
 }
 HOOKSJSON
 )
@@ -455,7 +459,9 @@ if check_cmd jq; then
         else .onSessionEnd += [$entry]
         end
       )
-    else . end
+    else . end |
+    # Set attribution
+    if $new.attribution then .attribution = $new.attribution else . end
   ' "$SETTINGS_FILE" 2>/dev/null || echo "")
 
   if [[ -n "$MERGED" ]]; then
