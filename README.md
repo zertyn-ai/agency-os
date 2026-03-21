@@ -1,6 +1,6 @@
 <div align="center">
 
-# AGENCY OS
+# Agency OS
 
 **Turn Claude Code into a dev team.**
 
