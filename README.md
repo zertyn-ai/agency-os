@@ -1,7 +1,5 @@
 <div align="center">
 
-<img src="docs/assets/agencyos_logo.svg" alt="Agency OS Logo" width="100%">
-
 # Agency OS
 
 **Turn Claude Code into a dev team.**
